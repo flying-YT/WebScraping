@@ -17,7 +17,7 @@ namespace WebScraping
         {
             url = _url;
         }
-       
+
         public async Task Scraping()
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
@@ -79,11 +79,51 @@ namespace WebScraping
             return list;
         }
 
+        public string GetSelectTagText(string tag, string[] options, bool noTag)
+        {
+            string option = "";
+            foreach (string str in options)
+            {
+                option += str + " ";
+            }
+            option = option.Trim();
+            string key = "<" + tag + " " + option + @"(\s|>)(.*?|\n|>)*(.*?|\n)*</" + tag + @">";
+            //            Console.WriteLine( "key:" + key );
+            Match match = Regex.Match(HtmlText, @key);
+            if (noTag)
+            {
+                string textStr = match.Value.Replace("</" + tag + ">", "");
+                key = "<" + tag + " " + option + @"(\s|>)(.*?|\n)*>?";
+                return Regex.Replace(textStr, key, "");
+            }
+            else
+            {
+                return match.Value;
+            }
+        }
+
         public List<string> GetAncherURL()
         {
             List<string> list = new List<string>();
             string key = @"<a(\s|>)(.*?|\n|>)*(.*?|\n)*</a>";
             MatchCollection matches = Regex.Matches(HtmlText, @key);
+            foreach (Match match in matches)
+            {
+                if (!Regex.Match(match.Value, @"rel=nofollow").Success)
+                {
+                    Match href = Regex.Match(match.Value, @"href=""(.*?)""");
+                    string hrefText = href.Value.Replace("\"", "");
+                    list.Add(hrefText.Replace("href=", ""));
+                }
+            }
+            return list;
+        }
+
+        public List<string> GetAncherURL(string str)
+        {
+            List<string> list = new List<string>();
+            string key = @"<a(\s|>)(.*?|\n|>)*(.*?|\n)*</a>";
+            MatchCollection matches = Regex.Matches(str, @key);
             foreach (Match match in matches)
             {
                 if (!Regex.Match(match.Value, @"rel=nofollow").Success)
