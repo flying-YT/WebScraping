@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace WebScraping
 {
-    public class WebScraping
+    class WebScraping
     {
         private readonly string url;
         public string HtmlText { set; get; }
@@ -79,7 +79,30 @@ namespace WebScraping
             return list;
         }
 
-        public string GetSelectTagText(string tag, string[] options, bool noTag)
+        public List<string> GetSelectTagText(string tag, string text, bool noTag)
+        {
+            List<string> list = new List<string>();
+            string key = "<" + tag + @"(\s|>)(.*?|\n|>)*(.*?|\n)*</" + tag + @">";
+            MatchCollection matches = Regex.Matches(HtmlText, @key);
+            foreach (Match match in matches)
+            {
+                if (Regex.Match(match.Value, text).Success)
+                {
+                    if (noTag)
+                    {
+                        string textStr = match.Value.Replace("</" + tag + ">", "");
+                        list.Add(Regex.Replace(textStr, @"<(.*?)>", ""));
+                    }
+                    else
+                    {
+                        list.Add(match.Value);
+                    }
+                }
+            }
+            return list;
+        }
+
+        public string GetSelectTagElementText(string tag, string[] options, bool noTag)
         {
             string option = "";
             foreach (string str in options)
@@ -88,7 +111,6 @@ namespace WebScraping
             }
             option = option.Trim();
             string key = "<" + tag + " " + option + @"(\s|>)(.*?|\n|>)*(.*?|\n)*</" + tag + @">";
-            //            Console.WriteLine( "key:" + key );
             Match match = Regex.Match(HtmlText, @key);
             if (noTag)
             {
@@ -100,6 +122,30 @@ namespace WebScraping
             {
                 return match.Value;
             }
+        }
+
+        public string GetSelectTagElementText(string tag, string element, string option, bool noTag)
+        {
+            string str = "";
+            string key = "<" + tag + " " + element + @"(.*?|\n|>)*(.*?|\n)*</" + tag + @">";
+            MatchCollection matches = Regex.Matches(HtmlText, @key);
+            foreach (Match match in matches)
+            {
+                if (Regex.Match(match.Value, option).Success)
+                {
+                    if (noTag)
+                    {
+                        string textStr = match.Value.Replace("</" + tag + ">", "");
+                        key = "<" + tag + @"(.*?|\n)*?>";
+                        str = Regex.Replace(textStr, key, "");
+                    }
+                    else
+                    {
+                        str = match.Value;
+                    }
+                }
+            }
+            return str;
         }
 
         public List<string> GetAncherURL()
@@ -135,5 +181,6 @@ namespace WebScraping
             }
             return list;
         }
+
     }
 }
