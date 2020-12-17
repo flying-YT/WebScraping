@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,21 +14,35 @@ namespace WebScraping
             List<string[]> csv = new List<string[]>();
             WebScraping webScraping = new WebScraping("https://news.yahoo.co.jp/");
             await webScraping.Scraping();
-            string ulStr = webScraping.GetSelectTagElementText("ul", new string[] { "class=\"topicsList_main\"" }, true);
-            List<string> listStr = webScraping.GetAncherURL(ulStr);
+            string section = webScraping.GetSelectTagElement("section", "class", "topics", false);
+            List<string> ulStr = webScraping.GetSelectTagText(section, "ul", true);
+            List<string> listStr = webScraping.GetAncherURL(ulStr[0]);
             foreach (string s in listStr)
             {
                 var ws = new WebScraping(s);
                 await ws.Scraping();
-                List<string> pickUpStr = ws.GetSelectTagText("p", "続きを読む", false);
+                List<string> pickUpStr = ws.GetSelectTag("p", "続きを読む", false);
                 List<string> newURL = webScraping.GetAncherURL(pickUpStr[0]);
                 ws = new WebScraping(newURL[0]);
                 await ws.Scraping();
 
-                Console.WriteLine("タイトル：" + ws.GetSelectTagElementText("h1", new string[] { "class=\"sc-cooIXK krNmKM\"" }, true));
-                Console.WriteLine("本文：" + ws.GetSelectTagElementText("p", "class", "yjSlinkDirectlink", true) + "\n\n");
+                Console.WriteLine("タイトル：" + ws.GetSelectTagElement("h1", new string[] { "class=\"sc-cooIXK krNmKM\"" }, true));
+                Console.WriteLine("本文：" + ws.RemoveAncher(ws.GetSelectTagElement("p", "class", "yjSlinkDirectlink", true) + "\n\n"));
 
-                //        csv.Add(new string[] { ws.GetSelectTagElementText( "h1", new string[] { "class=\"sc-cooIXK krNmKM\"" }, true ), ws.GetSelectTagText( "p", new string[] { "class=\"sc-cbkKFq dOvqCR yjSlinkDirectlink\"" }, true ).Replace("\n", "") } );//sc-gqPbQI hvfJU yjSlinkDirectlink
+                csv.Add(new string[] { ws.GetSelectTagElement("h1", new string[] { "class=\"sc-cooIXK krNmKM\"" }, true), ws.RemoveAncher(ws.GetSelectTagElement("p", "class", "yjSlinkDirectlink", true)) });
+            }
+            try
+            {
+                StreamWriter file = new StreamWriter("test.csv", false, Encoding.UTF8);
+                foreach(string[] csvText in csv)
+                {
+                    file.WriteLine(csvText[0].Replace("\n", "") + "," + csvText[1].Replace("\n", ""));
+                }
+                file.Close();
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
             }
         }
     }

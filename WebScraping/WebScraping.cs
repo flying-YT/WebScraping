@@ -37,6 +37,11 @@ namespace WebScraping
             }
         }
 
+        public string RemoveAncher(string _str)
+        {
+            return Regex.Replace(_str, @"<a(.*?|\n)*>(.*?|\n)*</a>", "");
+        }
+
         private string RemoveScript(string _str)
         {
             string str = _str;
@@ -59,7 +64,7 @@ namespace WebScraping
             return str;
         }
 
-        public List<string> GetSelectTagText(string tag, bool noTag)
+        public List<string> GetSelectTag(string tag, bool noTag)
         {
             List<string> list = new List<string>();
             string key = "<" + tag + @"(\s|>)(.*?|\n|>)*(.*?|\n)*</" + tag + @">";
@@ -79,7 +84,7 @@ namespace WebScraping
             return list;
         }
 
-        public List<string> GetSelectTagText(string tag, string text, bool noTag)
+        public List<string> GetSelectTag(string tag, string text, bool noTag)
         {
             List<string> list = new List<string>();
             string key = "<" + tag + @"(\s|>)(.*?|\n|>)*(.*?|\n)*</" + tag + @">";
@@ -102,7 +107,27 @@ namespace WebScraping
             return list;
         }
 
-        public string GetSelectTagElementText(string tag, string[] options, bool noTag)
+        public List<string> GetSelectTagText(string html, string tag, bool noTag)
+        {
+            List<string> list = new List<string>();
+            string key = "<" + tag + @"(\s|>)(.*?|\n|>)*(.*?|\n)*</" + tag + @">";
+            MatchCollection matches = Regex.Matches(html, @key);
+            foreach (Match match in matches)
+            {
+                if (noTag)
+                {
+                    string textStr = match.Value.Replace("</" + tag + ">", "");
+                    list.Add(Regex.Replace(textStr, @"<(.*?)>", ""));
+                }
+                else
+                {
+                    list.Add(match.Value);
+                }
+            }
+            return list;
+        }
+
+        public string GetSelectTagElement(string tag, string[] options, bool noTag)
         {
             string option = "";
             foreach (string str in options)
@@ -124,7 +149,7 @@ namespace WebScraping
             }
         }
 
-        public string GetSelectTagElementText(string tag, string element, string option, bool noTag)
+        public string GetSelectTagElement(string tag, string element, string option, bool noTag)
         {
             string str = "";
             string key = "<" + tag + " " + element + @"(.*?|\n|>)*(.*?|\n)*</" + tag + @">";
