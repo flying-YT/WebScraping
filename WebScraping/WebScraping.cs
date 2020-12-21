@@ -156,17 +156,22 @@ namespace WebScraping
             MatchCollection matches = Regex.Matches(HtmlText, @key);
             foreach (Match match in matches)
             {
-                if (Regex.Match(match.Value, option).Success)
+                string key2 = "<" + tag + " " + element + @"(.*?|\n)*>";
+                MatchCollection matchesTag = Regex.Matches(match.Value, key2);
+                foreach (Match matchTag in matchesTag)
                 {
-                    if (noTag)
+                    if (Regex.Match(matchTag.Value, option).Success)
                     {
-                        string textStr = match.Value.Replace("</" + tag + ">", "");
-                        key = "<" + tag + @"(.*?|\n)*?>";
-                        str = Regex.Replace(textStr, key, "");
-                    }
-                    else
-                    {
-                        str = match.Value;
+                        if (noTag)
+                        {
+                            string textStr = match.Value.Replace("</" + tag + ">", "");
+                            key = "<" + tag + @"(.*?|\n)*?>";
+                            str = Regex.Replace(textStr, key, "");
+                        }
+                        else
+                        {
+                            str = match.Value;
+                        }
                     }
                 }
             }
