@@ -23,33 +23,70 @@ namespace WebScraping
             List<string> titleStr = webScraping.GetSelectTagText(section, "a", true);
             foreach (string s in listStr)
             {
-                var ws = new WebScraping(s);
-                await ws.Scraping();
-                List<string> pickUpStr = ws.GetSelectTag("p", "続きを読む", false);
-                List<string> newURL = webScraping.GetAncherURL(pickUpStr[0]);
-                ws = new WebScraping(newURL[0]);
-                await ws.Scraping();
+                Console.WriteLine("URL:" + s);
+                try
+                {
+                    var ws = new WebScraping(s);
+                    await ws.Scraping();
+                    //List<string> pickUpStr = ws.GetSelectTag("p", "続きを読む", false);
+                    List<string> pickUpStr = ws.GetSelectTag("p", "記事全文を読む", false);
 
-                Console.WriteLine("タイトル：" + titleStr[count]);
-                Console.WriteLine("本文：" + ws.RemoveAncher(ws.GetSelectTagElement("p", "class", "yjSlinkDirectlink", true) + "\n\n"));
+                    List<string> newURL = webScraping.GetAncherURL(pickUpStr[0]);
+                    ws = new WebScraping(newURL[0]);
+                    await ws.Scraping();
 
-                csv.Add(new string[] { titleStr[count], ws.RemoveAncher(ws.GetSelectTagElement("p", "class", "yjSlinkDirectlink", true)) });
-                count++;
+                    Console.WriteLine("タイトル：" + titleStr[count]);
+                    Console.WriteLine("本文：" + ws.RemoveAncher(ws.GetSelectTagElement("p", "class", "yjSlinkDirectlink", true) + "\n\n"));
+
+                    csv.Add(new string[] { titleStr[count], ws.RemoveAncher(ws.GetSelectTagElement("p", "class", "yjSlinkDirectlink", true)) });
+                    count++;
+                }
+                catch
+                {
+                }
             }
             try
             {
+                string path = @"D:\データ収集\csv\";
+
                 Console.WriteLine("Directory");
                 Console.WriteLine(Environment.CurrentDirectory);
                 DateTime dt = DateTime.Now;
                 string fileName = dt.ToString("yyyyMMddHHmmss");
-                StreamWriter file = new StreamWriter(fileName + ".csv", false, Encoding.UTF8);
-                foreach(string[] csvText in csv)
+                StreamWriter file = new StreamWriter(path + fileName + ".csv", false, Encoding.UTF8);
+                foreach (string[] csvText in csv)
+                {
+                    file.WriteLine(csvText[0].Replace("\n", "") + "," + csvText[1].Replace("\n", ""));
+                }
+                file.Close();
+
+                path = @"C:\temp\";
+                file = new StreamWriter(path + fileName + ".csv", false, Encoding.UTF8);
+                foreach (string[] csvText in csv)
                 {
                     file.WriteLine(csvText[0].Replace("\n", "") + "," + csvText[1].Replace("\n", ""));
                 }
                 file.Close();
             }
-            catch(Exception e)
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
+            try
+            {
+                string path = @"D:\データ収集\log\";
+
+                DateTime dt = DateTime.Now;
+                string fileName = dt.ToString("yyyyMMddHHmmss");
+                StreamWriter file = new StreamWriter(path + fileName + ".txt", false, Encoding.UTF8);
+                foreach (string url in listStr)
+                {
+                    file.WriteLine(url);
+                }
+                file.Close();
+            }
+            catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
